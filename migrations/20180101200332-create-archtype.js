@@ -2,7 +2,8 @@
 
 exports.up = function(db) {
   return db.createTable('archtype', {
-    name: { type: 'string', length: '50', primaryKey: true, notNull: true }
+    id: { type: 'uuid', primaryKey: true, notNull: true },
+    name: { type: 'string', length: '50', notNull: true }
   });
 };
 
