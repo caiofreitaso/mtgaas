@@ -4,6 +4,7 @@ const pg = require('./pg-client');
 const uuid = require('uuid');
 const Player = require('../models/player');
 const Errors = require('../models/errors');
+const logger = require('../utils/logger');
 
 exports.addPlayer = async function(player) {
   let sql = '\
@@ -25,7 +26,7 @@ exports.addPlayer = async function(player) {
     result = (await pg.query(sql, values)).rows.map(row => new Player(row));
     result = result.length > 0 ? result[0] : Errors.badGateway;
   } catch(err) {
-    console.error(`addPlayer error: ${JSON.stringify({ err })}`);
+    logger.err('addPlayer', { err });
     result = Errors.badGateway;
   }
 
@@ -47,7 +48,7 @@ exports.updatePlayer = async function(id, newName) {
     result = (await pg.query(sql, values)).rows.map(row => new Player(row));
     result = result.length > 0 ? result[0] : Errors.player.notFound;
   } catch(err) {
-    console.error(`updatePlayer error: ${JSON.stringify({ err })}`);
+    logger.err('updatePlayer', { err });
     if (err.routine == 'string_to_uuid') result = Errors.player.notFound;
     else result = Errors.badGateway;
   }
@@ -65,7 +66,7 @@ exports.deletePlayer = async function(id) {
   try {
     await pg.query(sql, values);
   } catch(err) {
-    console.error(`deletePlayer error: ${JSON.stringify({ err })}`);
+    logger.err('deletePlayer', { err });
     if (err.routine == 'string_to_uuid') result = Errors.player.notFound;
     else result = Errors.badGateway;
   }
@@ -85,7 +86,7 @@ exports.getPlayer = async function(id) {
     result = (await pg.query(sql, values)).rows.map(row => new Player(row));
     result = (result.length > 0) ? result [0] : Errors.player.notFound;
   } catch(err) {
-    console.error(`getPlayer error: ${JSON.stringify({ err })}`);
+    logger.err('getPlayer', { err });
     if (err.routine == 'string_to_uuid') result = Errors.player.notFound;
     else result = Errors.badGateway;
   }
@@ -100,7 +101,7 @@ exports.getPlayers = async function() {
   try {
     result = (await pg.query(sql)).rows.map(row => new Player(row));
   } catch(err) {
-    console.error(`getPlayers error: ${JSON.stringify({ err })}`);
+    logger.err('getPlayers', { err });
     result = Errors.badGateway;
   }
 

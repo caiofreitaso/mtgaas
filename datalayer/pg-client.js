@@ -1,36 +1,39 @@
-'use strict';
+`use strict`;
 
 const { Pool } = require('pg');
 const dbConfig = require('../config').database;
+const logger = require('../utils/logger');
+
+const tag = 'PostgreSQL';
 
 class pgClient {
   constructor(client) {
-    console.log('PostgreSQL: client acquired');
+    logger.out(tag, 'client acquired');
     this.client = client;
   }
 
   query(text, values) {
     let object = { text, values };
 
-    console.log(`PostgreSQL query: ${JSON.stringify(object)}`);
+    logger.out(tag, { query: object});
 
     return this.client.query(object)
       .catch(err => {
-        console.error(`PostgreSQL error: ${JSON.stringify({ err })}`);
+        logger.err(tag, { err });
         return Promise.reject(err);
       });
   }
 
   release() {
-    console.log('PostgreSQL: client released');
+    logger.out(tag, 'client released');
     this.client.release();
   }
 
   begin() {
-    console.log('PostgreSQL: begining transaction');
+    logger.out(tag, 'begining transaction');
     return this.client.query('BEGIN')
       .catch(err => {
-        console.error(`PostgreSQL error: ${JSON.stringify({ err })}`);
+        logger.err(tag, { err });
         Promise.reject(err);
       });
   }
@@ -38,19 +41,19 @@ class pgClient {
   commit() {
     let error;
 
-    console.log('PostgreSQL: commiting');
+    logger.out(tag, 'committing');
 
     return this.client.query('COMMIT')
       .catch(errC => {
-        console.error(`PostgreSQL error: ${JSON.stringify({ err: errC })}`);
-        console.log('PostgreSQL: rolling back');
+        logger.err(tag, { err: errC });
+        logger.out(out, 'rolling back');
 
         error = errC;
 
-        return this.client.query('ROLLBACK');
+        return this.client.query(`ROLLBACK`);
       })
       .catch(errR => {
-        console.error(`PostgreSQL error: ${JSON.stringify({ err: errR })}`);
+        logger.err(tag, { err: errR });
         error = errR;
       })
       .then(() => this.release())
@@ -63,14 +66,14 @@ class pgClient {
   rollback(err) {
     let error;
 
-    console.error(`PostgreSQL error: ${JSON.stringify({ err })}`);
-    console.log('PostgreSQL: rolling back');
+    logger.err(tag, { err });
+    logger.out(tag, 'rolling out');
 
-    return this.client.query('ROLLBACK')
+    return this.client.query(`ROLLBACK`)
       .catch(errR => {
         error = errR;
 
-        console.error(`PostgreSQL error: ${JSON.stringify({ err: errR })}`);
+        logger.err(tag, { err: errR });
       })
       .then(() => this.release())
       .then(() => {
@@ -85,7 +88,7 @@ async function getClient() {
   try {
     return new pgClient(await (new Pool(dbConfig).connect()));
   } catch(err) {
-    console.error(`PostgreSQL error: ${JSON.stringify({ err })}`);
+    logger.err(tag, { err });
     throw err;
   }
 }
