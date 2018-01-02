@@ -26,6 +26,15 @@ class pgClient {
     this.client.release();
   }
 
+  begin() {
+    console.log('PostgreSQL: begining transaction');
+    return this.client.query('BEGIN')
+      .catch(err => {
+        console.error(`PostgreSQL error: ${JSON.stringify({ err })}`);
+        Promise.reject(err);
+      });
+  }
+
   commit() {
     let error;
 
@@ -72,28 +81,31 @@ class pgClient {
 
 }
 
-function getClient() {
-  return (new Pool(dbConfig)).connect()
-    .then(client => new pgClient(client))
-    .catch(err => {
-      console.error(`PostgreSQL error: ${JSON.stringify({ err })}`);
-      Promise.reject(err);
-    });
+async function getClient() {
+  try {
+    return new pgClient(await (new Pool(dbConfig).connect()));
+  } catch(err) {
+    console.error(`PostgreSQL error: ${JSON.stringify({ err })}`);
+    throw err;
+  }
 }
 
-function query(text, values) {
+async function query(text, values) {
   let client;
-  return getClient()
-    .then(newClient => { client = newClient; })
-    .then(() => client.query(text, values))
-    .then(result => {
-      client.release();
-      return result;
-    })
-    .catch(err => {
-       client.release();
-       Promise.reject(err);
-    });
+  let result;
+  let error;
+
+  try {
+    client = await getClient();
+    result = await client.query(text, values);
+  } catch (err) {
+    error = err;
+  } finally {
+    if (client) client.release();
+  }
+
+  if (error) throw error;
+  return result;
 }
 
 module.exports.getClient = getClient;

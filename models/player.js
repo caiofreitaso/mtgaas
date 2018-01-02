@@ -12,4 +12,4 @@ class Player {
   }
 }
 
-exports = Player;
+module.exports = Player;

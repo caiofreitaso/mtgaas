@@ -19,20 +19,17 @@ module.exports.getPlayer = async function getPlayer(req, res, next) {
 }
 
 module.exports.postPlayer = async function postPlayer(req, res, next) {
-  let player = {
-     'id': 'meu-id',
-     'name': 'player'
-  };
+  let player = new Player(req.body);
+  let result = await data.addPlayer(player);
+  let status = result.errorCode ? result.errorCode : 201;
 
-  res.json(player);
+  res.status(status).json(result);
 }
   
 module.exports.putPlayer = async function putPlayer(req, res, next) {
-  let player = {
-     'id': req.params.id,
-     'name': 'player'
-  };
+  let result = await data.updatePlayer(req.params.id, req.body.name);
+  let status = result.errorCode ? result.errorCode : 200;
 
-  res.json(player);
+  res.status(status).json(result);
 }
 

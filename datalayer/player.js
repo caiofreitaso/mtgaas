@@ -1,7 +1,9 @@
 'use strict';
 
 const pg = require('./pg-client');
+const uuid = require('uuid');
 const Player = require('../models/player');
+const Errors = require('../models/errors');
 
 exports.addPlayer = async function(player) {
   let sql = '\
@@ -12,19 +14,19 @@ exports.addPlayer = async function(player) {
     )\
     VALUES\
     (\
-      $1\
+      $1,\
       $2\
     )\
     RETURNING *';
-  let values = [ player.id, player.name ];
+  let values = [ uuid(), player.name ];
 
   let result;
   try {
-    result = await pg.query(sql, values);
-    result = result.rows.map(row => new Player(row))[0];
+    result = (await pg.query(sql, values)).rows.map(row => new Player(row));
+    result = result.length > 0 ? result[0] : Errors.badGateway;
   } catch(err) {
     console.error(`addPlayer error: ${JSON.stringify({ err })}`);
-    result = { errorCode: 500 };
+    result = Errors.badGateway;
   }
 
   return result;
@@ -42,11 +44,12 @@ exports.updatePlayer = async function(id, newName) {
 
   let result;
   try {
-    result = await pg.query(sql, values);
-    result = result.rows.map(row => new Player(row))[0];
+    result = (await pg.query(sql, values)).rows.map(row => new Player(row));
+    result = result.length > 0 ? result[0] : Errors.player.notFound;
   } catch(err) {
     console.error(`updatePlayer error: ${JSON.stringify({ err })}`);
-    result = { errorCode: 500 };
+    if (err.routine == 'string_to_uuid') result = Errors.player.notFound;
+    else result = Errors.badGateway;
   }
 
   return result;
@@ -63,7 +66,8 @@ exports.deletePlayer = async function(id) {
     await pg.query(sql, values);
   } catch(err) {
     console.error(`deletePlayer error: ${JSON.stringify({ err })}`);
-    result = { errorCode: 500 };
+    if (err.routine == 'string_to_uuid') result = Errors.player.notFound;
+    else result = Errors.badGateway;
   }
 
   return result;
@@ -78,11 +82,12 @@ exports.getPlayer = async function(id) {
 
   let result;
   try {
-    result = await pg.query(sql, values);
-    result = result.rows.map(row => new Player(row))[0];
+    result = (await pg.query(sql, values)).rows.map(row => new Player(row));
+    result = (result.length > 0) ? result [0] : Errors.player.notFound;
   } catch(err) {
     console.error(`getPlayer error: ${JSON.stringify({ err })}`);
-    result = { errorCode: 500 };
+    if (err.routine == 'string_to_uuid') result = Errors.player.notFound;
+    else result = Errors.badGateway;
   }
 
   return result;
@@ -93,11 +98,10 @@ exports.getPlayers = async function() {
 
   let result;
   try {
-    result = await pg.query(sql);
-    result = result.rows.map(row => new Player(row));
+    result = (await pg.query(sql)).rows.map(row => new Player(row));
   } catch(err) {
     console.error(`getPlayers error: ${JSON.stringify({ err })}`);
-    result = { errorCode: 500 };
+    result = Errors.badGateway;
   }
 
   return result;
