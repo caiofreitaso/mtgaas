@@ -4,7 +4,8 @@
   "description": "Magic: The Gathering as a Service",
   "main": "index.js",
   "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1"
+    "migrate": "node migrate.js",
+    "test": "mocha tests --recursive --no-timeouts"
   },
   "keywords": [
     "magic",
@@ -15,6 +16,11 @@
   "license": "MIT",
   "dependencies": {
     "body-parser": "^1.18.2",
-    "express": "^4.16.2"
+    "db-migrate": "^0.10.2",
+    "db-migrate-pg": "^0.2.5",
+    "express": "^4.16.2",
+    "mocha": "^4.1.0",
+    "pg": "^7.4.0",
+    "uuid": "^3.1.0"
   }
 }
