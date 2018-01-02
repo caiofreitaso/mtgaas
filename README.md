@@ -1,4 +1,4 @@
-#MTGaaS
+# MTGaaS
 
 Magic: The Gathering as a Service
 
@@ -39,7 +39,8 @@ npm start
 All the configuration for MTGaaS is done via environment variables.
 
 | Variable | Default |
-| `MTGAAS_PORT` | 8080 |
+|----------|---------|
+| `MTGAAS_PORT` | `8080` |
 | `MTGAAS_POSTGRES_HOST` | `localhost` |
 | `MTGAAS_POSTGRES_PORT` | `5433` |
 | `MTGAAS_POSTGRES_DATABASE` | `mtgaas_dev` |
